@@ -1,0 +1,19 @@
+@startuml Meta model
+
+title Meta model for Fairspace
+
+class Resource {
+    URI iri
+    String label
+}
+
+class Class extends Resource
+
+class Property extends Resource
+Class "*" -- "*" Property
+
+class Relation extends Resource
+Relation "1" -- "*" Class : domain
+Relation "1" -- "*" Class : range
+
+@enduml

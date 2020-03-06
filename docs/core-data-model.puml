@@ -1,0 +1,37 @@
+@startuml Core data model
+
+title Core data model for Fairspace
+
+enum Access {
+    Read
+    Write
+    Manage
+}
+
+class Resource {
+    URI iri
+    String label
+}
+
+class User extends Resource {
+    String username
+}
+
+class Workspace extends Resource {
+    String name
+}
+Workspace "*" -- "*" User
+(Workspace, User) . Access
+
+class File extends Resource {
+    String path
+}
+
+class Collection extends Resource {
+    String name
+}
+Collection "1" *- "*" File
+Collection "*" -- "*" User
+(Collection, User) . Access
+
+@enduml
