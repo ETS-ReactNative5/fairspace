@@ -1,0 +1,33 @@
+@startuml Workspaces and collections
+
+title Workspaces and collections
+
+enum Access {
+    Read
+    Write
+    Manage
+}
+
+class User {
+    String username
+}
+
+class Workspace {
+    String name
+}
+Workspace "*" -- "*" User: member
+(Workspace, User) . Access
+
+class File {
+    String path
+}
+
+class Collection {
+    String name
+}
+Collection "1" *- "*" File
+Collection "*" -- "*" Workspace: shared
+(Collection, Workspace) . Access
+Workspace "1" *- "*" Collection: owner
+
+@enduml
