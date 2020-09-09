@@ -44,9 +44,9 @@ export const handleSearchError = (e) => {
  */
 export const renderSearchResultProperty = (item, property) => {
     // eslint-disable-next-line no-unused-vars
-    const highlights = item.highlights.find(([key, value]) => key === property);
+    const highlights = item.highlights ? item.highlights.find(([key, value]) => key === property) : null;
     if (!highlights) {
-        const value = item[property] && item[property][0];
+        const value = item[property] && item[property];
         if (property === 'label') {
             return value || <Iri iri={item.id} />;
         }

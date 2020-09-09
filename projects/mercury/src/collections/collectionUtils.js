@@ -24,9 +24,19 @@ export const isCollectionPage = () => {
 
 export const getCollectionAbsolutePath = (location) => `/collections/${location}`;
 
-export const handleCollectionSearchRedirect = (history, value) => {
-    const searchUrl = value ? buildSearchUrl(value) : '';
-    history.push(`/collections${searchUrl}`);
+export const pathForIri = (iri: string) => {
+    const path = decodeURIComponent(new URL(iri).pathname);
+    return path.replace('/api/v1/webdav/', '');
+};
+
+export const handleCollectionSearchRedirect = (history, value, locationIri = '') => {
+    if (value) {
+        const searchParam = buildSearchUrl(value);
+        const locationIriParam = locationIri ? `&location=${encodeURIComponent(locationIri)}` : '';
+        history.push(`/collections${searchParam}${locationIriParam}`);
+    } else {
+        history.push(`/collections/${locationIri ? pathForIri(locationIri) : ''}`);
+    }
 };
 
 const permissionLevel = p => accessLevels.indexOf(p.access);
