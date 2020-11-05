@@ -66,6 +66,7 @@ public class Services {
         metadataPermissions = new MetadataPermissions(workspaceService, davFactory, userService);
 
         var metadataValidator = new ComposedValidator(
+                new FileMetadataAggregator(VOCABULARY, config.inheritableFileAttributesQuery),
                 new MachineOnlyClassesValidator(VOCABULARY),
                 new ProtectMachineOnlyPredicatesValidator(VOCABULARY),
                 new PermissionCheckingValidator(metadataPermissions),

@@ -145,5 +145,8 @@ public class FS {
     public static final String CAN_VIEW_PUBLIC_DATA_URI = NS + "canViewPublicData";
     public static final String CAN_ADD_SHARED_METADATA_URI = NS + "canAddSharedMetadata";
     public static final String IS_SUPERADMIN_URI = NS + "isSuperadmin";
+
+    public static final String AGGREGATED_METADATA_URI = NS + "aggregatedMetadata";
+    public static final Property aggregatedMetadata = createProperty(AGGREGATED_METADATA_URI);
 }
 
