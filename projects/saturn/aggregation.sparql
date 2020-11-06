@@ -12,14 +12,14 @@ SELECT DISTINCT ?p ?o WHERE {
       SELECT ?p ?o WHERE {
          ?s curie:sample/curie:isChildOf* ?sample .
          ?sample ?p ?o .
-         FILTER (?p IN (curie:hasOrigin, curie:sampleTopography, curie:isOfNature, curie:tumorCellularity, curie:collectDate))
+         FILTER (?p IN (curie:hasOrigin, curie:topography, curie:isOfNature, curie:tumorCellularity, curie:collectDate))
       }
     } UNION {
       # TPE Properties
       SELECT ?p ?o WHERE {
         ?s curie:aboutEvent/curie:isLinkedTo* ?event .
         ?event ?p ?o .
-        FILTER (?p IN (curie:tumorTopography, curie:tumorMorphology, curie:tumorLaterality, curie:eventType,
+        FILTER (?p IN (curie:topography, curie:tumorMorphology, curie:tumorLaterality, curie:eventType,
            curie:diagnosisDate, curie:ageAtDiagnosis, curie:tumorGradeType, curie:tumorGradeValue,
            curie:tnmType, curie:tnmT, curie:tnmN, curie:tnmM))
       }
