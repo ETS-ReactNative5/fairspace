@@ -17,15 +17,19 @@ import io.fairspace.saturn.webdav.LocalBlobStore;
 import io.fairspace.saturn.webdav.WebDAVServlet;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.sparql.util.Symbol;
 
 import javax.servlet.http.HttpServlet;
 import java.io.File;
+import java.io.IOException;
 
 import static io.fairspace.saturn.config.ConfigLoader.CONFIG;
 import static io.fairspace.saturn.vocabulary.Vocabularies.VOCABULARY;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.io.FileUtils.readFileToString;
 
 @Slf4j
 @Getter
@@ -48,6 +52,7 @@ public class Services {
     private final FilteredDatasetGraph filteredDatasetGraph;
     private final SearchProxyServlet searchProxyServlet;
 
+    @SneakyThrows(IOException.class)
     public Services(@NonNull String apiPrefix, @NonNull Config config, @NonNull Dataset dataset) {
         this.config = config;
         this.transactions = config.jena.bulkTransactions ? new BulkTransactions(dataset) : new SimpleTransactions(dataset);
@@ -66,7 +71,7 @@ public class Services {
         metadataPermissions = new MetadataPermissions(workspaceService, davFactory, userService);
 
         var metadataValidator = new ComposedValidator(
-                new FileMetadataAggregator(VOCABULARY, config.inheritableFileAttributesQuery),
+                new FileMetadataAggregator(VOCABULARY, readFileToString(new File("aggregation.sparql"), UTF_8)),
                 new MachineOnlyClassesValidator(VOCABULARY),
                 new ProtectMachineOnlyPredicatesValidator(VOCABULARY),
                 new PermissionCheckingValidator(metadataPermissions),

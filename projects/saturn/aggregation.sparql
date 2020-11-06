@@ -1,0 +1,34 @@
+PREFIX curie: <https://institut-curie.org/ontology#>
+
+SELECT DISTINCT ?p ?o WHERE {
+    {
+      # File properties
+      SELECT ?p ?o WHERE {
+         ?s ?p ?o .
+         FILTER (?p IN (curie:analysisType))
+      }
+    } UNION {
+      # Sample properties
+      SELECT ?p ?o WHERE {
+         ?s curie:sample/curie:isChildOf* ?sample .
+         ?sample ?p ?o .
+         FILTER (?p IN (curie:hasOrigin, curie:sampleTopography, curie:isOfNature, curie:tumorCellularity, curie:collectDate))
+      }
+    } UNION {
+      # TPE Properties
+      SELECT ?p ?o WHERE {
+        ?s curie:aboutEvent/curie:isLinkedTo* ?event .
+        ?event ?p ?o .
+        FILTER (?p IN (curie:tumorTopography, curie:tumorMorphology, curie:tumorLaterality, curie:eventType,
+           curie:diagnosisDate, curie:ageAtDiagnosis, curie:tumorGradeType, curie:tumorGradeValue,
+           curie:tnmType, curie:tnmT, curie:tnmN, curie:tnmM))
+      }
+    } UNION {
+      # Subject properties
+      SELECT ?p ?o WHERE {
+          ?s curie:aboutSubject|(curie:sample/curie:isChildOf*/curie:subject)|(curie:aboutEvent/curie:isLinkedTo*/curie:eventSubject) ?subject .
+          ?subject ?p ?o .
+          FILTER (?p IN (curie:isOfGender, curie:isOfSpecies, curie:ageAtLastNews, curie:ageAtDeath))
+      }
+    }
+}

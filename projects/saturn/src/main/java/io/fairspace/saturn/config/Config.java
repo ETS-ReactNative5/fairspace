@@ -49,8 +49,6 @@ public class Config {
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     public Map<String, String> services = new HashMap<>();
 
-    public String inheritableFileAttributesQuery;
-
     public static class Jena {
         public String metadataBaseIRI = "http://localhost/iri/";
 
