@@ -33,7 +33,7 @@ public class FileMetadataAggregator extends VocabularyAwareValidator {
             if (props.isEmpty()) {
                 continue;
             }
-            for (var f = file; f != null && !f.hasProperty(FS.dateDeleted); f = f.getPropertyResourceValue(FS.ownedBy)) {
+            for (var f = file; f != null && !f.hasProperty(FS.dateDeleted); f = f.getPropertyResourceValue(FS.belongsTo)) {
                 var aggregate = f.getPropertyResourceValue(FS.aggregatedMetadata);
                 if (aggregate == null) {
                     aggregate = added.createResource();
