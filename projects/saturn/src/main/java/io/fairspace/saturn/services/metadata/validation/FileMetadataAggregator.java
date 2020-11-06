@@ -60,9 +60,10 @@ public class FileMetadataAggregator extends VocabularyAwareValidator {
         template.setParam("s", file);
         var query = template.asQuery();
         var props = new HashMap<Property, RDFNode>();
-        QueryExecutionFactory.create(query, file.getModel())
-                .execSelect()
-                .forEachRemaining(row -> props.put(row.getResource("p").as(Property.class), row.get("o")));
+        try (var ex = QueryExecutionFactory.create(query, file.getModel())) {
+            ex.execSelect()
+                    .forEachRemaining(row -> props.put(row.getResource("p").as(Property.class), row.get("o")));
+        }
         return props;
     }
 }
