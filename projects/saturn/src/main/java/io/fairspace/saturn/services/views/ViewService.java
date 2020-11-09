@@ -15,7 +15,6 @@ import org.apache.jena.sparql.syntax.ElementGroup;
 import org.apache.jena.system.Txn;
 import org.apache.jena.vocabulary.RDFS;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,63 +49,19 @@ public class ViewService {
     public ViewPage retrieveViewPage(ViewRequest request) {
         var result = ViewPage.builder();
         var resources = new HashSet<>();
-        var view = config.views
-                .stream()
-                .filter(v -> v.name.equals(request.view))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Unknown view: " + request.view));
+        var view = getView(request.view);
         var page = (request.page != null && request.page >= 1) ? request.page : 1;
         var size = (request.size != null && request.size >= 1) ? request.size : 20;
         var skip = (page - 1) * size;
 
-        var query = QueryFactory.create(view.query);
-
-        if (!(query.getQueryPattern() instanceof ElementGroup)) {
-            var group = new ElementGroup();
-            group.addElement(query.getQueryPattern());
-            query.setQueryPattern(group);
-        }
-
-        var queryPatternGroup = (ElementGroup) query.getQueryPattern();
-
-        var constraints = new ArrayList<SearchConstraint>();
-
-        request.filters.forEach(filter -> {
-            var facet = config.facets
-                    .stream()
-                    .filter(f -> f.name.equals(filter.field))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Unknown facet: " + filter.field));
-
-            constraints.add(new SearchConstraint(createProperty(facet.property), filter.values.stream().map(v -> toRdfNode(v, facet.type)).collect(toSet()),
-                    toBound(filter.rangeStart, Double.NEGATIVE_INFINITY),
-                    toBound(filter.rangeEnd, Double.POSITIVE_INFINITY)));
-
-            var variable = new ExprVar(filter.field);
-            if (!filter.values.isEmpty()) {
-                if (filter.getValues().size() == 1) {
-                    queryPatternGroup.addElementFilter(new ElementFilter(new E_Equals(variable, toNodeValue(filter.values.get(0), facet.type))));
-                } else {
-                    queryPatternGroup.addElementFilter(new ElementFilter(new E_OneOf(variable, new ExprList(filter.values.stream().map(o -> toNodeValue(o, facet.type)).collect(toList())))));
-                }
-            }
-            if (filter.rangeStart != null) {
-                queryPatternGroup.addElementFilter(new ElementFilter(new E_GreaterThanOrEqual(variable, toNodeValue(filter.rangeStart, facet.type))));
-            }
-            if (filter.rangeEnd != null) {
-                queryPatternGroup.addElementFilter(new ElementFilter(new E_LessThanOrEqual(variable, toNodeValue(filter.rangeEnd, facet.type))));
-            }
-        });
-
-
-        var template = new ParameterizedSparqlString(query.toString());
+        var template = getQueryTemplate(view.query, request.filters);
 
         int[] total = {0};
         var start = currentTimeMillis();
 
         return Txn.calculateRead(ds, () -> {
             try {
-                withConstrainedScope(ds.getDefaultModel(), constraints, file -> {
+                withConstrainedScope(ds.getDefaultModel(), asConstraints(request.filters), file -> {
                     template.setParam("file", file);
                     var boundQuery = template.asQuery();
 
@@ -120,26 +75,7 @@ public class ViewService {
                             if (resources.add(row.getResource("resource"))) {
                                 total[0]++;
                                 if (total[0] > skip && resources.size() < size) {
-                                    var map = new HashMap<String, Object>();
-                                    row.varNames().forEachRemaining(name -> {
-                                        var value = row.get(name);
-                                        if (value.isURIResource()) {
-                                            map.put(name, value.asResource().getURI());
-                                            var label = getStringProperty(value.asResource(), RDFS.label);
-                                            if (label != null) {
-                                                map.put(name + ".label", label);
-                                            }
-                                        } else if (value.isLiteral()) {
-                                            var literal = value.asLiteral().getValue();
-                                            if (literal instanceof XSDDateTime) {
-                                                literal = ofEpochMilli(((XSDDateTime) literal).asCalendar().getTimeInMillis());
-                                            }
-                                            map.put(name, literal);
-                                        } else {
-                                            map.put(name, null);
-                                        }
-                                    });
-                                    result.row(map);
+                                    result.row(asMap(row));
                                 }
                                 if (total[0] == MAX_RESULTS) {
                                     throw TOO_MANY_RESULTS;
@@ -165,6 +101,90 @@ public class ViewService {
                     .totalPages((total[0] / size) + ((total[0] % size > 0) ? 1 : 0))
                     .build();
         });
+    }
+
+    private HashMap<String, Object> asMap(org.apache.jena.query.QuerySolution row) {
+        var map = new HashMap<String, Object>();
+        row.varNames().forEachRemaining(name -> {
+            var value = row.get(name);
+            if (value.isURIResource()) {
+                map.put(name, value.asResource().getURI());
+                var label = getStringProperty(value.asResource(), RDFS.label);
+                if (label != null) {
+                    map.put(name + ".label", label);
+                }
+            } else if (value.isLiteral()) {
+                var literal = value.asLiteral().getValue();
+                if (literal instanceof XSDDateTime) {
+                    literal = ofEpochMilli(((XSDDateTime) literal).asCalendar().getTimeInMillis());
+                }
+                map.put(name, literal);
+            } else {
+                map.put(name, null);
+            }
+        });
+        return map;
+    }
+
+    private ParameterizedSparqlString getQueryTemplate(String baseQuery, List<ViewRequest.Filter> filters) {
+        var query = QueryFactory.create(baseQuery);
+
+        if (!(query.getQueryPattern() instanceof ElementGroup)) {
+            var group = new ElementGroup();
+            group.addElement(query.getQueryPattern());
+            query.setQueryPattern(group);
+        }
+
+        var queryPatternGroup = (ElementGroup) query.getQueryPattern();
+
+
+        filters.forEach(filter -> {
+            var facet = getFacet(filter.field);
+
+            var variable = new ExprVar(filter.field);
+            if (!filter.values.isEmpty()) {
+                if (filter.getValues().size() == 1) {
+                    queryPatternGroup.addElementFilter(new ElementFilter(new E_Equals(variable, toNodeValue(filter.values.get(0), facet.type))));
+                } else {
+                    queryPatternGroup.addElementFilter(new ElementFilter(new E_OneOf(variable, new ExprList(filter.values.stream().map(o -> toNodeValue(o, facet.type)).collect(toList())))));
+                }
+            }
+            if (filter.rangeStart != null) {
+                queryPatternGroup.addElementFilter(new ElementFilter(new E_GreaterThanOrEqual(variable, toNodeValue(filter.rangeStart, facet.type))));
+            }
+            if (filter.rangeEnd != null) {
+                queryPatternGroup.addElementFilter(new ElementFilter(new E_LessThanOrEqual(variable, toNodeValue(filter.rangeEnd, facet.type))));
+            }
+        });
+
+        return new ParameterizedSparqlString(query.toString());
+    }
+
+    private Config.Search.View getView(String name) {
+        return config.views
+                .stream()
+                .filter(v -> v.name.equals(name))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown view: " + name));
+    }
+
+    private Config.Search.Facet getFacet(String field) {
+        return config.facets
+                .stream()
+                .filter(f -> f.name.equals(field))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown facet: " + field));
+    }
+
+    private List<SearchConstraint> asConstraints(List<ViewRequest.Filter> filters) {
+        return filters.stream()
+                .map(filter -> {
+                    var facet = getFacet(filter.field);
+                    return (new SearchConstraint(createProperty(facet.property),
+                            filter.values.stream().map(v -> toRdfNode(v, facet.type)).collect(toSet()),
+                            toBound(filter.rangeStart, Double.NEGATIVE_INFINITY),
+                            toBound(filter.rangeEnd, Double.POSITIVE_INFINITY)));
+                }).collect(toList());
     }
 
     private static NodeValue toNodeValue(Object o, Config.Search.ValueType type) {
