@@ -10,11 +10,13 @@ import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.sparql.expr.*;
+import org.apache.jena.sparql.syntax.Element;
 import org.apache.jena.sparql.syntax.ElementFilter;
 import org.apache.jena.sparql.syntax.ElementGroup;
 import org.apache.jena.system.Txn;
 import org.apache.jena.vocabulary.RDFS;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -129,35 +131,20 @@ public class ViewService {
     private ParameterizedSparqlString getQueryTemplate(String baseQuery, List<ViewRequest.Filter> filters) {
         var query = QueryFactory.create(baseQuery);
 
-        if (!(query.getQueryPattern() instanceof ElementGroup)) {
-            var group = new ElementGroup();
-            group.addElement(query.getQueryPattern());
-            query.setQueryPattern(group);
-        }
-
-        var queryPatternGroup = (ElementGroup) query.getQueryPattern();
-
-
-        filters.forEach(filter -> {
-            var facet = getFacet(filter.field);
-
-            var variable = new ExprVar(filter.field);
-            if (!filter.values.isEmpty()) {
-                if (filter.getValues().size() == 1) {
-                    queryPatternGroup.addElementFilter(new ElementFilter(new E_Equals(variable, toNodeValue(filter.values.get(0), facet.type))));
-                } else {
-                    queryPatternGroup.addElementFilter(new ElementFilter(new E_OneOf(variable, new ExprList(filter.values.stream().map(o -> toNodeValue(o, facet.type)).collect(toList())))));
-                }
-            }
-            if (filter.rangeStart != null) {
-                queryPatternGroup.addElementFilter(new ElementFilter(new E_GreaterThanOrEqual(variable, toNodeValue(filter.rangeStart, facet.type))));
-            }
-            if (filter.rangeEnd != null) {
-                queryPatternGroup.addElementFilter(new ElementFilter(new E_LessThanOrEqual(variable, toNodeValue(filter.rangeEnd, facet.type))));
-            }
-        });
+        var queryPatternGroup = asElementGroup(query.getQueryPattern());
+        query.setQueryPattern(queryPatternGroup);
+        asExpressions(filters).forEach(e -> queryPatternGroup.addElementFilter(new ElementFilter(e)));
 
         return new ParameterizedSparqlString(query.toString());
+    }
+
+    private static ElementGroup asElementGroup(Element e) {
+        if (e instanceof ElementGroup) {
+            return (ElementGroup) e;
+        }
+        var group = new ElementGroup();
+        group.addElement(e);
+        return group;
     }
 
     private Config.Search.View getView(String name) {
@@ -174,6 +161,29 @@ public class ViewService {
                 .filter(f -> f.name.equals(field))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown facet: " + field));
+    }
+
+    private List<Expr> asExpressions(List<ViewRequest.Filter> filters) {
+        var result = new ArrayList<Expr>();
+        filters.forEach(filter -> {
+                    var facet = getFacet(filter.field);
+
+                    var variable = new ExprVar(filter.field);
+                    if (!filter.values.isEmpty()) {
+                        if (filter.getValues().size() == 1) {
+                            result.add(new E_Equals(variable, toNodeValue(filter.values.get(0), facet.type)));
+                        } else {
+                            result.add(new E_OneOf(variable, new ExprList(filter.values.stream().map(o -> toNodeValue(o, facet.type)).collect(toList()))));
+                        }
+                    }
+                    if (filter.rangeStart != null) {
+                        result.add(new E_GreaterThanOrEqual(variable, toNodeValue(filter.rangeStart, facet.type)));
+                    }
+                    if (filter.rangeEnd != null) {
+                        result.add(new E_LessThanOrEqual(variable, toNodeValue(filter.rangeEnd, facet.type)));
+                    }
+                });
+        return result;
     }
 
     private List<SearchConstraint> asConstraints(List<ViewRequest.Filter> filters) {
