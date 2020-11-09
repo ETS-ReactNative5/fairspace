@@ -10,6 +10,7 @@ import io.fairspace.saturn.services.metadata.MetadataPermissions;
 import io.fairspace.saturn.services.metadata.MetadataService;
 import io.fairspace.saturn.services.metadata.validation.*;
 import io.fairspace.saturn.services.users.UserService;
+import io.fairspace.saturn.services.views.ViewService;
 import io.fairspace.saturn.services.workspaces.WorkspaceService;
 import io.fairspace.saturn.webdav.BlobStore;
 import io.fairspace.saturn.webdav.DavFactory;
@@ -20,6 +21,7 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.sparql.util.Symbol;
 
 import javax.servlet.http.HttpServlet;
@@ -51,6 +53,7 @@ public class Services {
     private final HttpServlet davServlet;
     private final FilteredDatasetGraph filteredDatasetGraph;
     private final SearchProxyServlet searchProxyServlet;
+    private final ViewService viewService;
 
     @SneakyThrows(IOException.class)
     public Services(@NonNull String apiPrefix, @NonNull Config config, @NonNull Dataset dataset) {
@@ -89,5 +92,7 @@ public class Services {
                 CONFIG.elasticsearchUrl,
                 transactions,
                 new IndexDispatcher(dataset.getContext()));
+
+        viewService = new ViewService(config.search, DatasetFactory.wrap(filteredDatasetGraph));
     }
 }

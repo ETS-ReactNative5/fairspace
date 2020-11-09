@@ -26,30 +26,32 @@ class SearchScopeMinimizer {
             return;
         }
 
-        filters:
-        for (var c : constraints) {
-            if (c.values != null) {
-                for (var v : c.values) {
-                    if ((v == null && !aggregate.hasProperty(c.property)) || aggregate.hasProperty(c.property, v)) {
-                        continue filters; // matches current filter!
+        if (constraints != null) {
+            filters:
+            for (var c : constraints) {
+                if (c.values != null && !c.values.isEmpty()) {
+                    for (var v : c.values) {
+                        if ((v == null && !aggregate.hasProperty(c.property)) || aggregate.hasProperty(c.property, v)) {
+                            continue filters; // matches current filter!
+                        }
                     }
-                }
-            } else if (c.min > Double.NEGATIVE_INFINITY || c.max < Double.POSITIVE_INFINITY) {
-                for (var it = aggregate.listProperties(c.property).mapWith(Statement::getLiteral).mapWith(Literal::getValue); it.hasNext(); ) {
-                    var value = it.next();
-                    double x = Double.NaN;
-                    if (value instanceof Number) {
-                        x = ((Number) value).doubleValue();
-                    } else if (value instanceof XSDDateTime) {
-                        x = ((XSDDateTime) value).asCalendar().getTimeInMillis();
-                    }
+                } else if (c.min > Double.NEGATIVE_INFINITY || c.max < Double.POSITIVE_INFINITY) {
+                    for (var it = aggregate.listProperties(c.property).mapWith(Statement::getLiteral).mapWith(Literal::getValue); it.hasNext(); ) {
+                        var value = it.next();
+                        double x = Double.NaN;
+                        if (value instanceof Number) {
+                            x = ((Number) value).doubleValue();
+                        } else if (value instanceof XSDDateTime) {
+                            x = ((XSDDateTime) value).asCalendar().getTimeInMillis();
+                        }
 
-                    if (c.min <= x && x <= c.max) {
-                        continue filters; // matches current filter!
+                        if (c.min <= x && x <= c.max) {
+                            continue filters; // matches current filter!
+                        }
                     }
                 }
+                return; // no match :(
             }
-            return; // no match :(
         }
 
         consumer.accept(resource);  // Finer test
