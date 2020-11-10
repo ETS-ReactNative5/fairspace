@@ -74,42 +74,47 @@ features:
   - MetadataEditing
 search:
   facets:
-    - name: collection
-      title: Collection
-      type: id
-      query: |
-        PREFIX rdfs:  <http://www.w3.org/2000/01/rdf-schema#>
-        PREFIX curie: <https://institut-curie.org/ontology#>
-        PREFIX fs:    <http://fairspace.io/ontology#>
-        SELECT DISTINCT ?value ?label
-        WHERE {
-          ?value a fs:Collection ;
-                 rdfs:label ?label .
-          FILTER NOT EXISTS { ?value fs:dateDeleted ?anyDateDeleted }
-        }
-        ORDER BY ?label
     - name: tumorCellularity
       title: Tumor Cellularity
       type: number
       property: https://institut-curie.org/ontology#tumorCellularity
       query:
+    - name: origin
+      title: Origin
+      type: id
+      property: https://institut-curie.org/ontology#hasOrigin
+      query:
+    - name: topography
+      title: Topography
+      type: id
+      property: https://institut-curie.org/ontology#topography
+      query:
+    - name: nature
+      title: Nature
+      type: id
+      property: https://institut-curie.org/ontology#isOfNature
+      query:
+    - name: gender
+      title: Gnder
+      type: id
+      property: https://institut-curie.org/ontology#isOfGender
+      query:
+    - name: collectDate
+      title: Date collected
+      type: id
+      property: https://institut-curie.org/ontology#collectDate
+      query:
+    - name: ageAtDeath
+      title: Age at death
+      type: number
+      property: https://institut-curie.org/ontology#ageAtDeath
+      query:
+    - name: ageAtLastNews
+      title: Age at last news
+      type: number
+      property: https://institut-curie.org/ontology#ageAtLastNews
+      query:
   views:
-    - name: collections
-      title: Collections
-      columns:
-        - name: collection
-          title: Collection
-          type: id
-      query: |
-        PREFIX rdfs:  <http://www.w3.org/2000/01/rdf-schema#>
-        PREFIX curie: <https://institut-curie.org/ontology#>
-        PREFIX fs:    <http://fairspace.io/ontology#>
-        SELECT DISTINCT ?resource ?workspace
-        WHERE {
-          ?file fs:belngsTo* ?collection .
-          ?collection a fs:Collection ;
-             fs:ownedBy ?workspace .
-        }
     - name: samples
       title: Samples
       columns:
@@ -126,7 +131,8 @@ search:
         PREFIX rdfs:  <http://www.w3.org/2000/01/rdf-schema#>
         PREFIX curie: <https://institut-curie.org/ontology#>
         PREFIX fs:    <http://fairspace.io/ontology#>
-        SELECT DISTINCT (?sample AS ?resource) ?description ?tumorCellularity ?origin ?topography ?nature ?collectDate
+
+        SELECT DISTINCT (?sample AS ?resource) ?description ?tumorCellularity ?origin ?topography ?nature ?collectDate ?gender ?species ?ageAtDeath ?ageAtLastNews
         WHERE {
           ?file curie:sample/curie:isChildOf* ?sample .
           OPTIONAL { ?sample curie:tumorCellularity ?tumorCellularity }
@@ -135,6 +141,12 @@ search:
           OPTIONAL { ?sample curie:topography ?topography }
           OPTIONAL { ?sample rdfs:isOfNature ?nature }
           OPTIONAL { ?sample curie:collectDate ?collectDate }
+          OPTIONAL { ?sample curie:subject ?subject .
+            OPTIONAL { ?subject curie:isOfGender ?gender }
+            OPTIONAL { ?subject curie:isOfSpecies ?species }
+            OPTIONAL { ?subject curie:isOfSpecies ?ageAtDeath }
+            OPTIONAL { ?subject curie:ageAtLastNews ?ageAtLastNews }
+          }
 
           FILTER NOT EXISTS { ?sample fs:dateDeleted ?anyDateDeleted }
         }
