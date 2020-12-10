@@ -1,30 +1,33 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, {useEffect, useState} from 'react';
-import {Checkbox, FormControl, FormControlLabel, FormGroup} from "@material-ui/core";
-import {Clear, MenuBook, Search} from "@material-ui/icons";
-import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
-import CheckBoxIcon from '@material-ui/icons/CheckBox';
-import InputAdornment from "@material-ui/core/InputAdornment";
-import TextField from "@material-ui/core/TextField";
-import IconButton from "@material-ui/core/IconButton";
-import Typography from "@material-ui/core/Typography";
-import Tooltip from "@material-ui/core/Tooltip";
-import Switch from "@material-ui/core/Switch";
-import Grid from "@material-ui/core/Grid";
-import type {MetadataViewFacetProperties} from "../MetadataViewFacetFactory";
+import {
+    Checkbox,
+    FormControl,
+    FormControlLabel,
+    FormGroup,
+    Grid,
+    IconButton,
+    InputAdornment,
+    Switch,
+    TextField,
+    Tooltip,
+    Typography
+} from "@material-ui/core";
+import {CheckBox, CheckBoxOutlineBlank, Clear, Search} from "@material-ui/icons";
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import type {MetadataViewFacetProperties, Option} from "../MetadataViewFacetFactory";
 import Iri from "../../../common/components/Iri";
-
+import {collectionAccessIcon} from '../../../collections/collectionUtils';
 
 type SelectProperties = {
     options: Option[];
     onChange: (string[]) => void;
     textFilterValue: string;
     activeFilterValues: any[];
-    showAccessFilter: boolean;
 }
 
 const SelectMultiple = (props: SelectProperties) => {
-    const {options, onChange, textFilterValue, activeFilterValues, accessFilterValue, showAccessFilter, classes} = props;
+    const {options, onChange, textFilterValue, activeFilterValues, accessFilterValue, classes} = props;
     const defaultOptions = Object.fromEntries(options.map(option => [option.value, activeFilterValues.includes(option.value)]));
     const [state, setState] = useState(defaultOptions);
 
@@ -32,7 +35,7 @@ const SelectMultiple = (props: SelectProperties) => {
 
     const readAccessFilter = (val) => (!accessFilterValue || val.access !== 'List');
 
-    const filterOptions = () => (options.filter(readAccessFilter).filter(textFilter));
+    const filterOptions = (): Option[] => (options.filter(readAccessFilter).filter(textFilter));
 
     useEffect(() => {
         setState(defaultOptions);
@@ -64,8 +67,8 @@ const SelectMultiple = (props: SelectProperties) => {
                     checked={state[option.value]}
                     onChange={handleChange}
                     name={option.value}
-                    icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                    checkedIcon={<CheckBoxIcon fontSize="small" />}
+                    icon={<CheckBoxOutlineBlank fontSize="small" />}
+                    checkedIcon={<CheckBox fontSize="small" />}
                 />
             )}
             label={(
@@ -79,19 +82,20 @@ const SelectMultiple = (props: SelectProperties) => {
     );
 
     const renderCheckboxList = () => {
-        if (showAccessFilter) {
-            return filterOptions().map(option => (
-                <Grid container direction="row" key={option.value}>
-                    <Grid item xs={10}>
-                        {renderCheckboxListElement(option)}
-                    </Grid>
-                    <Grid item xs={2} style={{textAlign: "right"}}>
-                        {option.access !== 'List' && <MenuBook fontSize="small" />}
-                    </Grid>
+        return filterOptions().map(option => (
+            <Grid container direction="row" key={option.value}>
+                <Grid item xs={10}>
+                    {renderCheckboxListElement(option)}
                 </Grid>
-            ));
-        }
-        return filterOptions().map(option => renderCheckboxListElement(option));
+                <Grid item xs={2} style={{textAlign: "right"}}>
+                    <FontAwesomeIcon
+                        title={`${option.access} access`}
+                        icon={collectionAccessIcon(option.access)}
+                        size="sm"
+                    />
+                </Grid>
+            </Grid>
+        ));
     };
 
     return (
@@ -180,7 +184,6 @@ const TextSelectionFacet = (props: MetadataViewFacetProperties) => {
                         textFilterValue={textFilterValue}
                         activeFilterValues={activeFilterValues}
                         accessFilterValue={showReadableFilterSelected}
-                        showAccessFilter={showAccessFilter}
                     />
                 </FormControl>
             </div>

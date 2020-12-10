@@ -1,8 +1,9 @@
 import queryString from "query-string";
+import {faBookOpen, faCogs, faDoorClosed, faEdit, faStream} from '@fortawesome/free-solid-svg-icons';
 import type {
     AccessLevel,
     AccessMode,
-    Collection,
+    Collection, CollectionPermissions,
     Permission,
     PrincipalPermission,
     Status
@@ -143,5 +144,34 @@ export const descriptionForStatus = (status: Status) => {
             return "Data not available for reading.";
         default:
             return "";
+    }
+};
+
+export const accessLevelForCollection = (collection: CollectionPermissions): AccessLevel => {
+    if (collection.canManage) {
+        return 'Manage';
+    }
+    if (collection.canWrite) {
+        return 'Write';
+    }
+    if (collection.canRead) {
+        return 'Read';
+    }
+    return 'List';
+};
+
+export const collectionAccessIcon = (access: AccessLevel) => {
+    switch (access) {
+        case 'List':
+            return faStream; // faDoorOpen;
+        case 'Read':
+            return faBookOpen; // faEye;
+        case 'Write':
+            return faEdit; // faPen;
+        case 'Manage':
+            return faCogs;
+        case 'None':
+        default:
+            return faDoorClosed;
     }
 };

@@ -13,6 +13,7 @@ import {
     withStyles,
 } from "@material-ui/core";
 
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import styles from './CollectionList.styles';
 import {getDisplayName} from "../users/userUtils";
 import MessageDisplay from "../common/components/MessageDisplay";
@@ -20,11 +21,16 @@ import {camelCaseToWords, formatDateTime} from "../common/utils/genericUtils";
 import useSorting from "../common/hooks/UseSorting";
 import usePagination from "../common/hooks/UsePagination";
 import {currentWorkspace} from '../workspaces/workspaces';
+import {accessLevelForCollection, collectionAccessIcon} from './collectionUtils';
 
 const baseColumns = {
     name: {
         valueExtractor: 'name',
         label: 'Name'
+    },
+    access: {
+        valueExtractor: 'access',
+        label: 'Access'
     },
     workspace: {
         valueExtractor: 'ownerWorkspaceName',
@@ -125,6 +131,7 @@ const CollectionList = ({
                     <TableBody>
                         {pagedItems.map((collection) => {
                             const selected = isSelected(collection);
+                            const accessLevel = accessLevelForCollection(collection);
 
                             return (
                                 <TableRow
@@ -140,6 +147,13 @@ const CollectionList = ({
                                             style={{margin: 0}}
                                             primary={collection.name}
                                             secondary={collection.description}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <FontAwesomeIcon
+                                            title={accessLevel}
+                                            icon={collectionAccessIcon(accessLevel)}
+                                            size="lg"
                                         />
                                     </TableCell>
                                     { currentWorkspace() ? null : (
