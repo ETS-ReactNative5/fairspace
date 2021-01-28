@@ -170,8 +170,11 @@ export const FileBrowser = ({
 
     // A highlighting of a path means only this path would be selected/checked
     const handlePathHighlight = path => {
+        const wasSelected = selection.isSelected(path.filename);
         selection.deselectAll();
-        selection.select(path.filename);
+        if (!wasSelected) {
+            selection.select(path.filename);
+        }
     };
 
     const handlePathDoubleClick = (path) => {
@@ -287,7 +290,7 @@ export const FileBrowser = ({
                     selectionEnabled={openedCollection.canRead}
                     files={files.map(item => ({...item, selected: selection.isSelected(item.filename)}))}
                     onPathCheckboxClick={path => selection.toggle(path.filename)}
-                    onPathHighlight={handlePathHighlight}
+                    onPathSingleClick={handlePathHighlight}
                     onPathDoubleClick={handlePathDoubleClick}
                     onAllSelection={shouldSelectAll => (shouldSelectAll ? selection.selectAll(files.map(file => file.filename)) : selection.deselectAll())}
                     showDeleted={showDeleted}

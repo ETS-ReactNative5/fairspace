@@ -21,13 +21,18 @@ import styles from './FileList.styles';
 import {compareBy, formatDateTime, stableSort} from "../common/utils/genericUtils";
 import useSorting from "../common/hooks/UseSorting";
 import usePagination from "../common/hooks/UsePagination";
+import useClicksWithPrevention from "../common/hooks/UseClicksWithPrevention";
 
 const FileList = ({
     classes, files, onPathCheckboxClick, onPathDoubleClick,
-    selectionEnabled, onAllSelection, onPathHighlight,
+    selectionEnabled, onAllSelection, onPathSingleClick,
     showDeleted, preselectedFile
 }) => {
     const [hoveredFileName, setHoveredFileName] = useState('');
+    const {handleSingleClick, handleDoubleClick} = useClicksWithPrevention(
+        onPathSingleClick,
+        onPathDoubleClick
+    );
 
     const columns = {
         name: {
@@ -150,8 +155,8 @@ const FileList = ({
                                     hover
                                     key={file.filename}
                                     selected={file.selected}
-                                    onClick={() => onPathHighlight(file)}
-                                    onDoubleClick={() => onPathDoubleClick(file)}
+                                    onClick={() => handleSingleClick([file])}
+                                    onDoubleClick={() => handleDoubleClick([file])}
                                     onMouseEnter={() => setHoveredFileName(file.filename)}
                                     onMouseLeave={() => setHoveredFileName('')}
                                     className={file.dateDeleted && classes.deletedFileRow}

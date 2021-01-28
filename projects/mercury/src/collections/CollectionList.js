@@ -21,6 +21,7 @@ import useSorting from "../common/hooks/UseSorting";
 import usePagination from "../common/hooks/UsePagination";
 import {currentWorkspace} from '../workspaces/workspaces';
 import {accessLevelForCollection, collectionAccessIcon} from './collectionUtils';
+import useClicksWithPrevention from "../common/hooks/UseClicksWithPrevention";
 
 const baseColumns = {
     name: {
@@ -69,6 +70,10 @@ const CollectionList = ({
     onCollectionDoubleClick,
     classes
 }) => {
+    const {handleSingleClick, handleDoubleClick} = useClicksWithPrevention(
+        onCollectionClick,
+        onCollectionDoubleClick
+    );
     const columns = {...baseColumns};
     if (currentWorkspace()) {
         delete columns.workspace;
@@ -136,8 +141,8 @@ const CollectionList = ({
                                 <TableRow
                                     key={collection.iri}
                                     hover
-                                    onClick={() => onCollectionClick(collection)}
-                                    onDoubleClick={() => onCollectionDoubleClick(collection)}
+                                    onClick={() => handleSingleClick([collection])}
+                                    onDoubleClick={() => handleDoubleClick([collection])}
                                     selected={selected}
                                     className={collection.dateDeleted && classes.deletedCollectionRow}
                                 >

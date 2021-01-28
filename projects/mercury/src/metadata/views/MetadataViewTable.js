@@ -8,6 +8,7 @@ import {formatDate} from "../../common/utils/genericUtils";
 import type {Collection} from "../../collections/CollectionAPI";
 import {collectionAccessIcon, pathForIri, redirectLink} from "../../collections/collectionUtils";
 import {RESOURCES_VIEW} from "./metadataViewUtils";
+import useClicksWithPrevention from "../../common/hooks/UseClicksWithPrevention";
 
 type MetadataViewTableProperties = {
     data: MetadataViewData;
@@ -51,7 +52,7 @@ export const MetadataViewTable = (props: MetadataViewTableProperties) => {
         row[RESOURCE_TYPE_COLUMN] && row[RESOURCE_TYPE_COLUMN][0] && row[RESOURCE_TYPE_COLUMN][0].value
     );
 
-    const handleResultSingleClick = (iri: string, label: string, linkedFiles: MetadataViewEntity[]) => {
+    const onResultSingleClick = (iri: string, label: string, linkedFiles: MetadataViewEntity[]) => {
         if (selected && selected.iri === iri) {
             toggleRow();
         } else {
@@ -59,11 +60,16 @@ export const MetadataViewTable = (props: MetadataViewTableProperties) => {
         }
     };
 
-    const handleResultDoubleClick = (iri: string, row: Map<string, any>) => {
+    const onResultDoubleClick = (iri: string, row: Map<string, any>) => {
         if (isResourcesView) {
             history.push(redirectLink(iri, getResourceType(row)));
         }
     };
+
+    const {handleSingleClick, handleDoubleClick} = useClicksWithPrevention(
+        onResultSingleClick,
+        onResultDoubleClick
+    );
 
     const renderCustomResourceColumn = (row: Map<string, any>, column: MetadataViewColumn) => {
         const iri = row[idColumn.name][0].value;
@@ -129,12 +135,12 @@ export const MetadataViewTable = (props: MetadataViewTableProperties) => {
                         key={row[idColumn.name][0].value}
                         hover={isResourcesView}
                         selected={selected && selected.iri === row[idColumn.name][0].value}
-                        onClick={() => handleResultSingleClick(
+                        onClick={() => handleSingleClick([
                             row[idColumn.name][0].value,
                             row[idColumn.name][0].label,
                             dataLinkColumn ? row[dataLinkColumn.name] : []
-                        )}
-                        onDoubleClick={() => handleResultDoubleClick(row[idColumn.name][0].value, row)}
+                        ])}
+                        onDoubleClick={() => handleDoubleClick([row[idColumn.name][0].value, row])}
                     >
                         {visibleColumns.map(column => renderTableCell(row, column))}
                     </TableRow>
