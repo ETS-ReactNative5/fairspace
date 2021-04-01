@@ -1773,7 +1773,7 @@ Preferably this is done by an automated process that ensures the consistency
 of the metadata and uniqueness of metadata entities.
 Metadata on collection and file level is protected by the access policy of the collections.
 
-_User administration_ is organised in an external component ([Keycloak]),
+_User administration_ is organised in an external component ({Keycloak}[Keycloak]),
 but user permissions are stored in Fairspace.
 A back end application is responsible for storing the data and metadata,
 and for providing APIs for securely retrieving and adding data and metadata using standard data formats and protocols.
@@ -1825,7 +1825,7 @@ Only when the shared metadata may contain sensitive information that should
 not be visible for some users, the public data and public metadata roles should be discarded for
 those users.
 
-Workspaces are used to organise collections in a hierarchy. On workspace level there are two access levels:
+Workspaces are used to organise access to collections. On workspace level there are two access levels:
 
 * _Manager_: can edit workspace details, manage workspace access and manage access to all collections that belong to the workspace;
 * _Member_: can create a collection in the workspace.
