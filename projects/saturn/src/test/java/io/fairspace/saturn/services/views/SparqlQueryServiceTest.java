@@ -6,6 +6,7 @@ import io.fairspace.saturn.rdf.search.FilteredDatasetGraph;
 import io.fairspace.saturn.rdf.transactions.*;
 import io.fairspace.saturn.services.metadata.*;
 import io.fairspace.saturn.services.metadata.validation.*;
+import io.fairspace.saturn.services.search.*;
 import io.fairspace.saturn.services.users.*;
 import io.fairspace.saturn.services.workspaces.*;
 import io.fairspace.saturn.webdav.*;
@@ -45,6 +46,8 @@ public class SparqlQueryServiceTest {
     BlobStore store;
     @Mock
     UserService userService;
+    @Mock
+    SearchService searchService;
     @Mock
     private MetadataPermissions permissions;
     WorkspaceService workspaceService;
@@ -109,7 +112,8 @@ public class SparqlQueryServiceTest {
         var filteredDatasetGraph = new FilteredDatasetGraph(ds.asDatasetGraph(), metadataPermissions);
         var filteredDataset = DatasetImpl.wrap(filteredDatasetGraph);
 
-        queryService = new SparqlQueryService(ConfigLoader.CONFIG.search, ConfigLoader.VIEWS_CONFIG, filteredDataset);
+        queryService = new SparqlQueryService(
+                ConfigLoader.CONFIG.search, ConfigLoader.VIEWS_CONFIG, filteredDataset, searchService);
 
         when(permissions.canWriteMetadata(any())).thenReturn(true);
         api = new MetadataService(tx, VOCABULARY, new ComposedValidator(new UniqueLabelValidator()), permissions);

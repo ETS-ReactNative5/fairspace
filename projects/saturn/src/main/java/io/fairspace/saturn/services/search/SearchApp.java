@@ -1,16 +1,19 @@
 package io.fairspace.saturn.services.search;
 
 import io.fairspace.saturn.services.BaseApp;
+import io.fairspace.saturn.services.views.*;
 
 import static org.eclipse.jetty.http.MimeTypes.Type.APPLICATION_JSON;
 import static spark.Spark.post;
 
 public class SearchApp extends BaseApp {
     private final SearchService searchService;
+    private final QueryService queryService;
 
-    public SearchApp(String basePath, SearchService searchService) {
+    public SearchApp(String basePath, SearchService searchService, QueryService queryService) {
         super(basePath);
         this.searchService = searchService;
+        this.queryService = queryService;
     }
 
     @Override
@@ -18,7 +21,7 @@ public class SearchApp extends BaseApp {
         post("/files", (req, res) -> {
             res.type(APPLICATION_JSON.asString());
             var request = mapper.readValue(req.body(), FileSearchRequest.class);
-            var results = searchService.getFileSearchResults(request);
+            var results = queryService.searchFiles(request);
             return mapper.writeValueAsString(results);
         });
 

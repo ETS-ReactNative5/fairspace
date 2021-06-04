@@ -82,15 +82,15 @@ public class Services {
         filteredDatasetGraph = new FilteredDatasetGraph(dataset.asDatasetGraph(), metadataPermissions);
         var filteredDataset = DatasetImpl.wrap(filteredDatasetGraph);
 
+        searchService = new SearchService(filteredDataset);
+
         queryService = viewStoreClient == null
-                ? new SparqlQueryService(config.search, viewsConfig, filteredDataset)
+                ? new SparqlQueryService(config.search, viewsConfig, filteredDataset, searchService)
                 : new JdbcQueryService(config.search, viewStoreClient, transactions, davFactory.root);
         ViewStoreReader viewStoreReader = null;
         if (queryService instanceof JdbcQueryService) {
             viewStoreReader = ((JdbcQueryService)queryService).getViewStoreReader();
         }
         viewService = new ViewService(viewsConfig, filteredDataset, viewStoreReader);
-
-        searchService = new SearchService(filteredDataset);
     }
 }

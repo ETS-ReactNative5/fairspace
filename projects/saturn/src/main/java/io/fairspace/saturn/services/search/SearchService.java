@@ -6,7 +6,7 @@ import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Resource;
 
-import java.util.ArrayList;
+import java.util.*;
 
 import static java.util.Optional.ofNullable;
 import static org.apache.jena.rdf.model.ResourceFactory.createResource;
@@ -62,14 +62,14 @@ public class SearchService {
                 .build();
     }
 
-    private ArrayList<SearchResultDTO> getFilesByText(FileSearchRequest request) {
+    private List<SearchResultDTO> getFilesByText(FileSearchRequest request) {
         var query = getSearchForFilesQuery(request.getParentIRI());
         var binding = new QuerySolutionMap();
         binding.add("regexQuery", createStringLiteral(getQueryRegex(request.getQuery())));
         return getByQuery(query, binding);
     }
 
-    private ArrayList<SearchResultDTO> getResourceByText(LookupSearchRequest request) {
+    private List<SearchResultDTO> getResourceByText(LookupSearchRequest request) {
         var binding = new QuerySolutionMap();
         binding.add("query", createStringLiteral(request.getQuery()));
         binding.add("type", createResource(request.getResourceType()));
@@ -83,7 +83,7 @@ public class SearchService {
         return getByQuery(RESOURCE_BY_TEXT_QUERY, binding);
     }
 
-    private ArrayList<SearchResultDTO> getByQuery(Query query, QuerySolutionMap binding) {
+    private List<SearchResultDTO> getByQuery(Query query, QuerySolutionMap binding) {
         log.debug("Executing query:\n{}", query);
         var selectExecution = QueryExecutionFactory.create(query, ds, binding);
         var results = new ArrayList<SearchResultDTO>();

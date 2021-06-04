@@ -2,6 +2,7 @@ package io.fairspace.saturn.services.views;
 
 import io.fairspace.saturn.config.*;
 import io.fairspace.saturn.rdf.transactions.*;
+import io.fairspace.saturn.services.search.*;
 import io.milton.resource.*;
 import lombok.*;
 
@@ -39,6 +40,13 @@ public class JdbcQueryService implements QueryService {
     }
 
     @SneakyThrows
+    protected List<String> accessibleCollectionNames() {
+        return transactions.calculateRead(m ->
+                rootSubject.getChildren().stream()
+                        .map(collection -> getCollectionName(collection.getUniqueId()))
+                        .collect(Collectors.toList()));
+    }
+
     protected void applyCollectionsFilterIfRequired(String view, List<ViewFilter> filters) {
         boolean collectionsFilterRequired = view.equalsIgnoreCase("Resource") ||
                 filters.stream().anyMatch(
@@ -46,10 +54,7 @@ public class JdbcQueryService implements QueryService {
         if (!collectionsFilterRequired) {
             return;
         }
-        var collections = transactions.calculateRead(m ->
-                rootSubject.getChildren().stream()
-                        .map(collection -> (Object)getCollectionName(collection.getUniqueId()))
-                        .collect(Collectors.toList()));
+        var collections = accessibleCollectionNames().stream().map(c -> (Object)c).collect(Collectors.toList());
         if (filters.stream()
                 .anyMatch(filter -> filter.getField().equalsIgnoreCase("Resource_collection"))) {
             // Update existing filters in place
@@ -67,6 +72,18 @@ public class JdbcQueryService implements QueryService {
                 .field("Resource_collection")
                 .values(collections)
                 .build());
+    }
+
+    public SearchResultsDTO searchFiles(FileSearchRequest request) {
+        return SearchResultsDTO.builder()
+                .query(request.getQuery())
+                .results(
+                        viewStoreReader.retrieveResourceRows(
+                                accessibleCollectionNames(),
+                                request.getParentIRI(),
+                                request.getQuery(),
+                                20))
+                .build();
     }
 
     public ViewPageDTO retrieveViewPage(ViewRequest request) {

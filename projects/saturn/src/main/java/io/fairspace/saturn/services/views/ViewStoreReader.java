@@ -2,8 +2,10 @@ package io.fairspace.saturn.services.views;
 
 import io.fairspace.saturn.config.*;
 import io.fairspace.saturn.config.ViewsConfig.*;
+import io.fairspace.saturn.services.search.*;
 import lombok.extern.slf4j.*;
 
+import javax.validation.constraints.*;
 import java.sql.*;
 import java.time.*;
 import java.util.*;
@@ -462,6 +464,30 @@ public class ViewStoreReader {
         } catch (SQLException e) {
             throw new QueryException("Error aggregating column values", e);
         }
+    }
+
+    /**
+     * Searches for file system resources (collections, directories, files).
+     * The search is a case-insensitive substring match on either the label
+     * or the description of the resource.
+     * The search is restricted to the collections that are passed in
+     * {@param allowedCollections}. If that list is empty, no results are returned.
+     * If {@param locationIRI} is set, the search is restricted to resources
+     * that belong hierarchically to that location.
+     *
+     * @param allowedCollections the collections to restrict the search to.
+     * @param locationIRI if set, filters on resources with this iri as prefix.
+     * @param search the search text to search on.
+     * @param limit the maximum number of results to return.
+     * @return A list of search result objects.
+     */
+    public List<SearchResultDTO> retrieveResourceRows(
+            @NotNull List<String> allowedCollections,
+            String locationIRI,
+            String search,
+            int limit) {
+        // FIXME: implement file search
+        throw new RuntimeException("Not yet implemented.");
     }
 
     /**

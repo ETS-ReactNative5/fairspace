@@ -4,6 +4,7 @@ import io.fairspace.saturn.config.Config;
 import io.fairspace.saturn.config.ViewsConfig;
 import io.fairspace.saturn.config.ViewsConfig.ColumnType;
 import io.fairspace.saturn.config.ViewsConfig.View;
+import io.fairspace.saturn.services.search.*;
 import io.fairspace.saturn.vocabulary.FS;
 import lombok.extern.log4j.*;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -34,11 +35,18 @@ public class SparqlQueryService implements QueryService {
     private final Config.Search config;
     private final ViewsConfig searchConfig;
     private final Dataset ds;
+    private final SearchService searchService;
 
-    public SparqlQueryService(Config.Search config, ViewsConfig viewsConfig, Dataset ds) {
+    public SparqlQueryService(Config.Search config, ViewsConfig viewsConfig, Dataset ds, SearchService searchService) {
         this.config = config;
         this.searchConfig = viewsConfig;
         this.ds = ds;
+        this.searchService = searchService;
+    }
+
+    @Override
+    public SearchResultsDTO searchFiles(FileSearchRequest request) {
+        return searchService.getFileSearchResults(request);
     }
 
     public ViewPageDTO retrieveViewPage(ViewRequest request) {
