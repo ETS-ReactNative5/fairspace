@@ -26,6 +26,7 @@ fairspace:
         nginx.ingress.kubernetes.io/configuration-snippet: |
           proxy_set_header  X-Forwarded-Proto $scheme;
           add_header Access-Control-Allow-Credentials true;
+          add_header DAV 1;
         nginx.ingress.kubernetes.io/enable-cors: "true"
         nginx.ingress.kubernetes.io/cors-allow-methods: GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, TRACE, COPY, LOCK, MKCOL, MOVE, PROPFIND, PROPPATCH, UNLOCK
       docs:
